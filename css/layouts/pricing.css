@@ -146,7 +146,7 @@ img {
         text-shadow: 0 1px 1px black;*/ 
         
 /* HELLO 2: */
-        font-family: HelveticaNeue-Thin;
+        font-family: 'HelveticaNeue-Thin','Roboto', Arial, sans-serif;
         font-weight: 300;
         font-size: 3em;
         color: #4A90E2;
