@@ -36,3 +36,21 @@ First verify the generated pages.dev deployment: homepage content, favicon, mobi
 The user reports `andrewfuller.dev` and `andrewfuller.xyz` serve the current site. The root CNAME names `.xyz`; the live DNS and redirect configuration have not been verified. Decide which is canonical before setting a redirect from the other domain. Avoid conflicting Pages, DNS, or redirect rules. This project intentionally does not publish a GitHub CNAME artifact.
 
 After both domains work on Pages, disable the old GitHub Pages deployment. Legacy Grunt files and unused assets can be removed in a subsequent cleanup once the migration is verified.
+
+## Security
+
+The static site sends no client JavaScript and needs no runtime secrets. `public/_headers` configures Cloudflare Pages response headers, including a restrictive CSP. Astro emits CSS as external files so styles work without unsafe-inline. If adding scripts, analytics, forms, fonts, or external assets, update the policy deliberately and verify it in a browser. Local Astro preview does not apply Cloudflare's `_headers`; verify headers on the deployed pages.dev URL and custom domains. These headers apply to static Pages responses; future Functions need their own response headers.
+
+A generated 404.html avoids Pages' default SPA fallback for missing URLs. Photoshop source files are excluded from the new public output; the original remains in the legacy checkout. Never place secrets or private source assets under public/.
+
+Development and preview bind to loopback by default. Use `npm run dev -- --host 0.0.0.0` only when shared environment access is needed.
+
+Before cutover, verify:
+
+- Cloudflare and GitHub accounts use MFA/passkeys; grant the GitHub app access only to this repository.
+- Protect master with reviewed pull requests; set Cloudflare production deployments to master after merging. Do not leave a temporary feature branch as production.
+- Keep deployment credentials out of the repository and build variables unless required. This static build requires none.
+- Enable HTTPS redirects for both custom domains. Verify certificates, canonical redirects, and absence of redirect loops before considering HSTS. Do not enable includeSubDomains/preload without checking every subdomain.
+- Preview deployments are public unless Cloudflare Access protection is configured. Do not publish private content in previews.
+- On deployed responses, verify CSP, nosniff, frame restrictions, expected page styling, and an HTTP 404 for an unknown path. Disable conflicting Cloudflare script injection/optimizations if they violate the no-script policy.
+- Review Dependabot PRs and run npm audit periodically. The old root package.json still has obsolete dependencies; remove the legacy Grunt pipeline after the hosting cutover. Cloudflare builds must stay rooted in site/.
