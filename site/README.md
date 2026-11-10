@@ -23,7 +23,7 @@ Create a Worker with Git integration for fuller/fuller.github.io. Grant the Clou
 
 | Setting | Value |
 | --- | --- |
-| Project/Worker name | andrew-fuller |
+| Project/Worker name | fuller-github-io |
 | Branch for initial testing | setup/cloudflare-pages |
 | Root directory | site |
 | Build command | npm run build |

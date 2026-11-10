@@ -36,6 +36,7 @@ test('Workers static output contains security policy and excludes private source
 
 test('Workers serves static build with explicit 404 behavior', () => {
   const config = JSON.parse(read('wrangler.json'));
+  assert.equal(config.name, 'fuller-github-io');
   assert.equal(config.assets.directory, './dist');
   assert.equal(config.assets.not_found_handling, '404-page');
   assert.equal(config.assets.html_handling, 'auto-trailing-slash');
