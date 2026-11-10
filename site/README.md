@@ -1,60 +1,48 @@
-# Astro site for Cloudflare Pages
+# Astro on Cloudflare Workers with Static Assets
 
-The current homepage is in `src/pages/index.astro`; static assets are in `public/`.
-The existing root HTML and CNAME remain in place for GitHub Pages until cutover.
+Use Node 24. The Astro homepage is in src/pages/index.astro; static assets are in public/. The legacy root site and CNAME remain available for GitHub Pages until the domain cutover is verified.
 
-## Local development
+## Development and validation
 
-Use Node 24. From this directory:
+From site/:
 
 ```sh
 npm ci
 npm run dev
 npm run build
-npm run preview
+npm test
+npm run deploy:check
+npm run workers:dev
 ```
 
-In Codex Cloud, use `npm ci --cache /workspace/.npm-cache` if the default npm cache is not writable.
+Astro dev provides hot reload. workers:dev serves the built dist/ using Cloudflare's local runtime on port 8787, including static asset headers and routing. Rebuild after changes. npm run preview uses Astro's server and does not apply _headers. All local servers bind to loopback by default. In Codex use npm ci --cache /workspace/.npm-cache if the home cache is not writable.
 
-## Connect Cloudflare Pages to GitHub
+## Connect GitHub using Workers Builds
 
-In Cloudflare, create a **Pages** project with Git integration (not a direct-upload project). Authorize Cloudflare's GitHub app for `fuller/fuller.github.io`.
-
-Use these settings:
+Create a Worker with Git integration for fuller/fuller.github.io. Grant the Cloudflare GitHub app access only to this repository.
 
 | Setting | Value |
 | --- | --- |
-| Root directory | `site` |
-| Build command | `npm run build` |
-| Build output directory | `dist` |
-| Environment variable | `NODE_VERSION=24` |
+| Project/Worker name | andrew-fuller |
+| Branch for initial testing | setup/cloudflare-pages |
+| Root directory | site |
+| Build command | npm run build |
+| Deploy command | npm run deploy |
+| Preview/non-production command | npm run deploy:preview |
+| Environment variable | NODE_VERSION=24 |
 
-Choose a production branch containing this directory. For the long-term workflow, merge this change into `master` and select `master`; use a feature branch for review before cutover. No Cloudflare adapter or API token is required for this static Astro build. Cloudflare handles Git authorization through its GitHub app.
+The branch keeps its existing name for continuity. Merge into master and select master as the production branch for the ongoing workflow. The Worker name in the dashboard must match wrangler.json. Preview uploads create versions; they do not replace production. Preview URLs are public unless protected with Cloudflare Access. Cloudflare supplies deployment authentication to its builds; do not commit tokens or add credentials to public assets.
 
-First verify the generated pages.dev deployment: homepage content, favicon, mobile layout, and outbound links. Then add custom domains in the Pages project's Custom domains settings and follow Cloudflare's DNS instructions. Add domains through Pages before changing DNS. Verify HTTPS and both hostnames after propagation. Keep the current hosting available until cutover is verified.
+wrangler.json deploys only dist/ with explicit HTML routing and a real 404 page. There is no Worker script, runtime secret, or Astro SSR adapter required. To add API endpoints later, add a Worker entry point and scoped routing/bindings; update tests and apply headers to dynamic responses separately. To add Astro server-rendered routes, evaluate the Astro Cloudflare adapter at that time.
 
-The user reports `andrewfuller.dev` and `andrewfuller.xyz` serve the current site. The root CNAME names `.xyz`; the live DNS and redirect configuration have not been verified. Decide which is canonical before setting a redirect from the other domain. Avoid conflicting Pages, DNS, or redirect rules. This project intentionally does not publish a GitHub CNAME artifact.
-
-After both domains work on Pages, disable the old GitHub Pages deployment. The obsolete Grunt dependencies have been removed. Legacy root HTML and assets remain until cutover.
+First verify the workers.dev URL: homepage, styles, favicon, response security headers, and HTTP 404 for a missing path. Then add Custom Domains through the Worker dashboard. The user identifies andrewfuller.dev and andrewfuller.xyz; the legacy root CNAME names .xyz. Live DNS, redirect behavior, and certificates remain unverified. Decide which domain is canonical before redirecting the other. Verify both domains and HTTPS before disabling GitHub Pages. No domain routes are declared in the repository, so a code deploy alone will not switch live domains.
 
 ## Security
 
-The static site sends no client JavaScript and needs no runtime secrets. `public/_headers` configures Cloudflare Pages response headers, including a restrictive CSP. Astro emits CSS as external files so styles work without unsafe-inline. If adding scripts, analytics, forms, fonts, or external assets, update the policy deliberately and verify it in a browser. Local Astro preview does not apply Cloudflare's `_headers`; verify headers on the deployed pages.dev URL and custom domains. These headers apply to static Pages responses; future Functions need their own response headers.
+public/_headers supplies a restrictive CSP, nosniff, frame restrictions, referrer policy, and permissions policy for static responses. Astro emits external CSS to avoid unsafe-inline. No JavaScript runs in the current site. When adding scripts, forms, analytics, external fonts, or dynamic responses, update the policy deliberately and verify browser behavior. Avoid Cloudflare script injection/optimizations that conflict with the policy.
 
-A generated 404.html avoids Pages' default SPA fallback for missing URLs. Photoshop source files are excluded from the new public output; the original remains in the legacy checkout. Never place secrets or private source assets under public/.
+Never place secrets or private source files under public/. The Photoshop file is excluded from the new output; legacy copies remain until cutover. GitHub Actions audits dependencies, builds, and tests on pull requests and relevant branch pushes. Dependabot checks npm dependencies weekly. Review these PRs before merging.
 
-Development and preview bind to loopback by default. Use `npm run dev -- --host 0.0.0.0` only when shared environment access is needed.
+Use MFA/passkeys for Cloudflare and GitHub. Protect master with reviewed pull requests and require CI after verifying it on GitHub. Preview deployments must not contain private content. Verify HTTPS redirects before considering HSTS; do not enable includeSubDomains/preload without checking all subdomains.
 
-Before cutover, verify:
-
-- Cloudflare and GitHub accounts use MFA/passkeys; grant the GitHub app access only to this repository.
-- Protect master with reviewed pull requests; set Cloudflare production deployments to master after merging. Do not leave a temporary feature branch as production.
-- Keep deployment credentials out of the repository and build variables unless required. This static build requires none.
-- Enable HTTPS redirects for both custom domains. Verify certificates, canonical redirects, and absence of redirect loops before considering HSTS. Do not enable includeSubDomains/preload without checking every subdomain.
-- Preview deployments are public unless Cloudflare Access protection is configured. Do not publish private content in previews.
-- On deployed responses, verify CSP, nosniff, frame restrictions, expected page styling, and an HTTP 404 for an unknown path. Disable conflicting Cloudflare script injection/optimizations if they violate the no-script policy.
-- Review Dependabot PRs and run npm audit periodically. The root package.json now only delegates commands to the Astro site; it has no dependencies. Cloudflare builds must stay rooted in site/.
-
-## Validation
-
-After building, run `npm test` to check the generated pages, stylesheet assets, and Cloudflare security policy. GitHub Actions runs dependency auditing, build, and these tests on pull requests and production/migration branch pushes. Require the build job in branch protection after it passes on GitHub.
+The build uses a pinned Wrangler dev dependency and a committed lockfile. Run npm audit periodically. CI does not deploy or receive Cloudflare secrets.

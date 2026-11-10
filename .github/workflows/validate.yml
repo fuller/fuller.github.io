@@ -24,3 +24,6 @@ jobs:
       - run: npm audit --audit-level=moderate
       - run: npm run build
       - run: npm test
+      - run: npm run deploy:check
+        env:
+          WRANGLER_SEND_METRICS: 'false'

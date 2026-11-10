@@ -22,7 +22,7 @@ test('both pages comply with script-free and inline-style-free policy', () => {
     assert.match(html, /lang="en"/);
   }
 });
-test('Cloudflare output contains security policy and excludes private source artifacts', () => {
+test('Workers static output contains security policy and excludes private source artifacts', () => {
   const headers = read('dist/_headers');
   assert.equal(headers, read('public/_headers'));
   for (const directive of ["default-src 'none'", "script-src 'none'", "style-src 'self'", "frame-ancestors 'none'", 'X-Content-Type-Options: nosniff']) {
@@ -32,4 +32,12 @@ test('Cloudflare output contains security policy and excludes private source art
     assert.equal(existsSync(new URL(`../dist/${file}`, import.meta.url)), false, file);
   }
   assert.ok(readFileSync(new URL('../dist/favicons/favicon_comp/favicon.ico', import.meta.url)).length > 0);
+});
+
+test('Workers serves static build with explicit 404 behavior', () => {
+  const config = JSON.parse(read('wrangler.json'));
+  assert.equal(config.assets.directory, './dist');
+  assert.equal(config.assets.not_found_handling, '404-page');
+  assert.equal(config.assets.html_handling, 'auto-trailing-slash');
+  assert.equal(config.main, undefined);
 });

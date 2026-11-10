@@ -7,12 +7,19 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "workers:dev": "wrangler dev --local --ip 127.0.0.1 --port 8787",
+    "deploy": "wrangler deploy",
+    "deploy:preview": "wrangler versions upload",
+    "deploy:check": "wrangler deploy --dry-run"
   },
   "dependencies": {
     "astro": "7.4.8"
   },
   "engines": {
     "node": ">=24 <25"
+  },
+  "devDependencies": {
+    "wrangler": "4.159.0"
   }
 }

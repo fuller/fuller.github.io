@@ -1,6 +1,6 @@
 # Andrew Fuller
 
-Astro source and Cloudflare Pages deployment instructions are in [site/README.md](site/README.md).
+Astro source and Cloudflare Workers with Static Assets deployment instructions are in [site/README.md](site/README.md).
 
 Use Node 24. Install with `cd site && npm ci`, then run `npm run dev`, `npm run build`, and `npm test` there. Root npm scripts delegate to site/; the root has no dependencies. The obsolete Grunt pipeline has been removed.
 
