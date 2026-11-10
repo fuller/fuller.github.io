@@ -35,7 +35,7 @@ First verify the generated pages.dev deployment: homepage content, favicon, mobi
 
 The user reports `andrewfuller.dev` and `andrewfuller.xyz` serve the current site. The root CNAME names `.xyz`; the live DNS and redirect configuration have not been verified. Decide which is canonical before setting a redirect from the other domain. Avoid conflicting Pages, DNS, or redirect rules. This project intentionally does not publish a GitHub CNAME artifact.
 
-After both domains work on Pages, disable the old GitHub Pages deployment. Legacy Grunt files and unused assets can be removed in a subsequent cleanup once the migration is verified.
+After both domains work on Pages, disable the old GitHub Pages deployment. The obsolete Grunt dependencies have been removed. Legacy root HTML and assets remain until cutover.
 
 ## Security
 
@@ -53,4 +53,8 @@ Before cutover, verify:
 - Enable HTTPS redirects for both custom domains. Verify certificates, canonical redirects, and absence of redirect loops before considering HSTS. Do not enable includeSubDomains/preload without checking every subdomain.
 - Preview deployments are public unless Cloudflare Access protection is configured. Do not publish private content in previews.
 - On deployed responses, verify CSP, nosniff, frame restrictions, expected page styling, and an HTTP 404 for an unknown path. Disable conflicting Cloudflare script injection/optimizations if they violate the no-script policy.
-- Review Dependabot PRs and run npm audit periodically. The old root package.json still has obsolete dependencies; remove the legacy Grunt pipeline after the hosting cutover. Cloudflare builds must stay rooted in site/.
+- Review Dependabot PRs and run npm audit periodically. The root package.json now only delegates commands to the Astro site; it has no dependencies. Cloudflare builds must stay rooted in site/.
+
+## Validation
+
+After building, run `npm test` to check the generated pages, stylesheet assets, and Cloudflare security policy. GitHub Actions runs dependency auditing, build, and these tests on pull requests and production/migration branch pushes. Require the build job in branch protection after it passes on GitHub.
